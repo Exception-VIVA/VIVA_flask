@@ -17,21 +17,27 @@ def hello_world():
     return 'Hello, World!'
 
 
-@app.route('/yolo', methods=['GET'])
+@app.route('/yolo', methods=['POST'])
 def yolo():
-    # 업로드 폴더에 있는 해당 이미지 읽기
-    img = cv2.imread('./upload/test.jpg', cv2.IMREAD_COLOR)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    arr = []
+    filenames = request.args["file_name"]
+    filenames = filenames.split(',')
+    to_node = []
+    for filename in filenames:
+        print(filename)
+        #업로드 폴더에 있는 해당 이미지 읽기
+        img = cv2.imread('./upload/'+filename+'.jpg', cv2.IMREAD_COLOR)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        arr = []
 
-    # tfnet 라이브러리를 이용하여 해당 이미지의 결과 json으로 뽑기
-    results = tfnet.return_predict(img)
-    print(results)
-    for result in results:
-        arr.append(json.dumps(str(result))) #json.dumps 해야 형변환 해서 백엔드에 보냄
+        # tfnet 라이브러리를 이용하여 해당 이미지의 결과 json으로 뽑기
+        results = tfnet.return_predict(img)
+        print(results)
+        for result in results:
+            arr.append(json.dumps(str(result))) #json.dumps 해야 형변환 해서 백엔드에 보냄
+        to_node.append(arr);
 
     return {
-        'yolo_result': arr
+        'yolo_result': to_node
     }
 
 
