@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import json
 from darkflow.darkflow.net.build import TFNet
-from flask import Flask, request
+from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
@@ -11,6 +11,7 @@ options = {"model": "./darkflow/cfg/my-tiny-yolo.cfg",
            "metaLoad": './darkflow/darkflow/built_graph/my-tiny-yolo.meta', "threshold": 0.4
            }
 tfnet = TFNet(options)
+
 
 @app.route('/')
 def hello_world():
@@ -24,8 +25,8 @@ def yolo():
     to_node = []
     for filename in filenames:
         print(filename)
-        #업로드 폴더에 있는 해당 이미지 읽기
-        img = cv2.imread('./upload/'+filename+'.jpg', cv2.IMREAD_COLOR)
+        # 업로드 폴더에 있는 해당 이미지 읽기
+        img = cv2.imread('./upload/' + filename + '.jpg', cv2.IMREAD_COLOR)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         arr = []
 
@@ -33,12 +34,25 @@ def yolo():
         results = tfnet.return_predict(img)
         print(results)
         for result in results:
-            arr.append(json.dumps(str(result))) #json.dumps 해야 형변환 해서 백엔드에 보냄
-        to_node.append(arr);
+            arr.append(json.dumps(str(result)))   #json.dumps 해야 형변환 해서 백엔드에 보냄
+        to_node.append(arr)
 
-    return {
+    return jsonify({
         'yolo_result': to_node
-    }
+    })
+
+
+@app.route('/test', methods=['POST'])
+def test():
+    lists = request.args['file_name']
+    lists = lists.split(',')
+    data = []
+    for list in lists:
+        data.append(list)
+
+    return jsonify({
+        'result': data
+    })
 
 
 if __name__ == '__main__':
