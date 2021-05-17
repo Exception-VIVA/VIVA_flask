@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
+import sys
+import time
+import requests
 import json
+import urllib.request
+from collections import OrderedDict
 from darkflow.darkflow.net.build import TFNet
 from flask import Flask, request, jsonify
 
@@ -22,11 +27,17 @@ def hello_world():
 def yolo():
     filenames = request.args["file_name"]
     filenames = filenames.split(',')
+    del filenames[0] #workbook_sn 삭제
     to_node = []
     for filename in filenames:
         print(filename)
+        #http 링크로 하는거
+        req = urllib.request.urlopen(filename)
+        img = np.asarray(bytearray(req.read()), dtype="uint8")
+        img = cv2.imdecode(img, cv2.IMREAD_COLOR)
         # 업로드 폴더에 있는 해당 이미지 읽기
-        img = cv2.imread('./upload/' + filename + '.jpg', cv2.IMREAD_COLOR)
+        #img = cv2.imread(img_l, cv2.IMREAD_COLOR)
+        #img = cv2.imread('./upload/' + filename + '.jpg', cv2.IMREAD_COLOR)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         arr = []
 
