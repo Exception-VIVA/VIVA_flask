@@ -21,6 +21,7 @@ LIMIT_PX = 1024
 LIMIT_BYTE = 1024 * 1024  # 1MB
 LIMIT_BOX = 40
 
+
 def kakao_ocr_resize(image_path: str):
     """
     ocr detect/recognize api helper
@@ -48,6 +49,7 @@ def kakao_ocr_resize(image_path: str):
         return image_path
     return None
 
+
 def kakao_ocr(image_path: str, appkey: str):
     """
     OCR api request example
@@ -64,13 +66,15 @@ def kakao_ocr(image_path: str, appkey: str):
 
     return requests.post(API_URL, headers=headers, files={"image": data})
 
+
 def read_ocr(image):
-    if len(sys.argv) != 3:
-        print("Please run with args: $ python example.py /path/to/image appkey")
+    # if len(sys.argv) != 3:
+    #     print("Please run with args: $ python example.py /path/to/image appkey")
     appkey = 'c858cbb7294b2c96b1287054dd31337f'
     white = [255, 255, 255]
     img = image
-    image_path = image
+    # 여기까지 됨
+    # image_path = image
     constant = cv2.copyMakeBorder(img, 200, 100, 100, 100, cv2.BORDER_CONSTANT, value=white)
     image_path = constant
     time.sleep(2)
@@ -90,26 +94,30 @@ def read_ocr(image):
         word_list.append(outword)
     return word_list
 
+
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
+
 
 @app.route('/yolo', methods=['POST'])
 def yolo():
     filenames = request.args["file_name"]
     filenames = filenames.split(',')
-    del filenames[0] #workbook_sn 삭제
+    del filenames[0]  # workbook_sn 삭제
     to_node = []
+
     for filename in filenames:
+        print(filename)
+        # http 링크로 하는거
         # 이미지 불러오기
         req = urllib.request.urlopen(filename)
         img = np.asarray(bytearray(req.read()), dtype="uint8")
         img = cv2.imdecode(img, cv2.IMREAD_COLOR)
         # 업로드 폴더에 있는 해당 이미지 읽기
-        #img = cv2.imread("zip/zip7.jpeg")
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img = cv2.resize(img, None, fx=0.4, fy=0.4)
         height, width, channels = img.shape
-        arr = []
 
         # Yolo 로드
         net = cv2.dnn.readNet("version3/viva-yolov3-tiny-detection-v2_48000.weights",
@@ -157,7 +165,7 @@ def yolo():
                     output["w"] = int(w)
                     output["h"] = int(h)
 
-                    if label == 'check_box' or label == 'uncheck_box':
+                    if (label == 'check_box' or label == 'uncheck_box'):
                         output["recognition_word"] = 'null'
                     else:
                         cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
@@ -181,10 +189,9 @@ def yolo():
 
         # 왼쪽/오른쪽을 나눌 x좌표
         half = img.shape[1]
-        print(half)
 
         # x축을 기준으로 정렬한 것을 토대로 절반을 기준으로 오른페이지 왼페이지로 나눔
-        for result in result_fix2:
+        for result in (result_fix2):
 
             if (result['x'] + result['w'] < half / 2):
                 left.append(result)
@@ -199,7 +206,6 @@ def yolo():
         left.extend(right)
 
         result_fix3 = left
-
         # 3. 중복 detection을 제거
         # 지금 오류있음 -> 저거 딜리트되면 reuslt_fix땡겨져서 하나 넘어가짐;
 
@@ -209,16 +215,15 @@ def yolo():
             if (index == 0):
                 label_past = result['label']
                 size_past = ((result['x'] + result['w'] + result['h'] - result['x']) ** 2 + (
-                            result['y'] - result['y'] + result['w'] + result['h']) ** 2) ** 0.5
+                        result['y'] - result['y'] + result['w'] + result['h']) ** 2) ** 0.5
 
             else:
                 label_now = result['label']
                 size_now = ((result['x'] + result['w'] + result['h'] - result['x']) ** 2 + (
-                            result['y'] - result['y'] + result['w'] + result['h']) ** 2) ** 0.5
+                        result['y'] - result['y'] + result['w'] + result['h']) ** 2) ** 0.5
 
                 # OCR을 적용할 spn/short_ans/page_num에만 적용될 예정
                 if (result['label'] != 'check_box' and result['label'] != 'uncheck_box'):
-                    # if(label_now=='spn' or label_now=='short_ans' or label_now=='page_num'):
                     # 이미 정렬되었으므로 연속으로 나오는 same label은 중복 detection으로 간주
                     if (label_now == label_past):
                         # 크기가 더 작은 쪽을 제거함 -> 제거한 것을 출력해서 확인함
@@ -226,26 +231,35 @@ def yolo():
                             del (result_fix3[index])
                         else:
                             del (result_fix3[index - 1])
+                        index = index - 1
 
                 label_past = label_now
                 size_past = size_now
             index = index + 1
 
+        to_node.append(result_fix3)
         # 현지언니가 부탁한형식으로 json제작 근데 막. ''이거잇음
 
         output_result = []
+        ans_num = 0
         index = 0
         r_list = []
+        json_r = dict()
 
+        print(len(result_fix3))
         for result in result_fix3:
             label = result['label']
             if (index == 0):
                 r_list.append(result)
             else:
                 if (label == 'spn' or label == 'page_num'):  # stop
-                    json_r = dict()
-                    json_r["ans"] = r_list
-                    output_result.append(json.dumps(json_r))
+                    json_r['ans'] = r_list
+                    print(json_r)
+
+                    output_result.append(json_r)
+                    #output_result[ans_num] = json_r
+                    ans_num = ans_num+1
+                    #output_result.append(json.dumps(json_r))
                     r_list.clear()
                     r_list.append(result)
                 else:
@@ -253,36 +267,21 @@ def yolo():
 
             index = index + 1
 
-        output_result.append(json.dumps(json_r))
+        #output_result[ans_num] = json_r
+        json_r['ans'] = r_list
+        print(json_r)
+        #json_r[ans_num] = r_list
+        output_result.append(json_r)
 
         ##이게 최종 한페이지에 대한 리턴#####  output_result
         print("<output_result>")
         print(output_result)
-        to_node.append(output_result)
-
-    # for filename in filenames:
-    #     print(filename)
-    #     #http 링크로 하는거
-    #     req = urllib.request.urlopen(filename)
-    #     img = np.asarray(bytearray(req.read()), dtype="uint8")
-    #     img = cv2.imdecode(img, cv2.IMREAD_COLOR)
-    #     # 업로드 폴더에 있는 해당 이미지 읽기
-    #     #img = cv2.imread(img_l, cv2.IMREAD_COLOR)
-    #     #img = cv2.imread('./upload/' + filename + '.jpg', cv2.IMREAD_COLOR)
-    #     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    #     arr = []
-    #
-    #     # tfnet 라이브러리를 이용하여 해당 이미지의 결과 json으로 뽑기
-    #     results = tfnet.return_predict(img)
-    #     print(results)
-    #     for result in results:
-    #         arr.append(json.dumps(str(result)))   #json.dumps 해야 형변환 해서 백엔드에 보냄
-    #     to_node.append(arr)
+        print(len(output_result))
+        #to_node.append(output_result)
 
     return jsonify({
-        'yolo_result': to_node
+        "yolo_result": to_node
     })
-
 
 @app.route('/test', methods=['POST'])
 def test():
