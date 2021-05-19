@@ -240,44 +240,45 @@ def yolo():
         to_node.append(result_fix3)
         # 현지언니가 부탁한형식으로 json제작 근데 막. ''이거잇음
 
-        output_result = []
-        ans_num = 0
-        index = 0
-        r_list = []
-        json_r = dict()
-
-        print(len(result_fix3))
-        for result in result_fix3:
-            label = result['label']
-            if (index == 0):
-                r_list.append(result)
-            else:
-                if (label == 'spn' or label == 'page_num'):  # stop
-                    json_r['ans'] = r_list
-                    print(json_r)
-
-                    output_result.append(json_r)
-                    #output_result[ans_num] = json_r
-                    ans_num = ans_num+1
-                    #output_result.append(json.dumps(json_r))
-                    r_list.clear()
-                    r_list.append(result)
-                else:
-                    r_list.append(result)
-
-            index = index + 1
-
-        #output_result[ans_num] = json_r
-        json_r['ans'] = r_list
-        print(json_r)
-        #json_r[ans_num] = r_list
-        output_result.append(json_r)
-
-        ##이게 최종 한페이지에 대한 리턴#####  output_result
-        print("<output_result>")
-        print(output_result)
-        print(len(output_result))
-        #to_node.append(output_result)
+        #지금 이 부분이 안됨...
+        # output_result = []
+        # ans_num = 0
+        # index = 0
+        # r_list = []
+        # json_r = dict()
+        #
+        # print(len(result_fix3))
+        # for result in result_fix3:
+        #     label = result['label']
+        #     if (index == 0):
+        #         r_list.append(result)
+        #     else:
+        #         if (label == 'spn' or label == 'page_num'):  # stop
+        #             json_r['ans'] = r_list
+        #             print(json_r)
+        #
+        #             output_result.append(json_r)
+        #             #output_result[ans_num] = json_r
+        #             ans_num = ans_num+1
+        #             #output_result.append(json.dumps(json_r))
+        #             r_list.clear()
+        #             r_list.append(result)
+        #         else:
+        #             r_list.append(result)
+        #
+        #     index = index + 1
+        #
+        # #output_result[ans_num] = json_r
+        # json_r['ans'] = r_list
+        # print(json_r)
+        # #json_r[ans_num] = r_list
+        # output_result.append(json_r)
+        #
+        # ##이게 최종 한페이지에 대한 리턴#####  output_result
+        # print("<output_result>")
+        # print(output_result)
+        # print(len(output_result))
+        # #to_node.append(output_result)
 
     return jsonify({
         "yolo_result": to_node
