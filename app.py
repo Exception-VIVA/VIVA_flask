@@ -141,6 +141,7 @@ def yolo():
         # class_ids = []
         # confidences = []
         # boxes = []
+        flag = True
         for out in outs:
             for detection in out:
                 scores = detection[5:]
@@ -165,12 +166,17 @@ def yolo():
                     output["w"] = int(w)
                     output["h"] = int(h)
 
-                    if (label == 'check_box' or label == 'uncheck_box'):
-                        output["recognition_word"] = 'null'
-                    else:
+                    if (label == 'short_ans'):
                         cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
                         recognition_words = read_ocr(cropped_img)
                         output["recognition_word"] = recognition_words
+                    elif (label == 'spn' and flag == True):
+                        cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
+                        recognition_words = read_ocr(cropped_img)
+                        output["recognition_word"] = recognition_words
+                        flag = False
+                    else:
+                        output["recognition_word"] = 'null'
 
                     # 이거다 원형 -> darkflow에서 제공하던 버전이랑 똑같음
                     json.dumps(output)
@@ -228,9 +234,15 @@ def yolo():
                     if (label_now == label_past):
                         # 크기가 더 작은 쪽을 제거함 -> 제거한 것을 출력해서 확인함
                         if (size_now < size_past):
-                            del (result_fix3[index])
+                            if (label_now == 'spn' and result_fix3[index] == 'null'):
+                                del (result_fix3[index])
+                            else:
+                                del (result_fix3[index - 1])
                         else:
-                            del (result_fix3[index - 1])
+                            if (label_now == 'spn' and result_fix3[index - 1] == 'null'):
+                                del (result_fix3[index - 1])
+                            else:
+                                del (result_fix3[index])
                         index = index - 1
 
                 label_past = label_now
@@ -238,51 +250,11 @@ def yolo():
             index = index + 1
 
         to_node.append(result_fix3)
-        # 현지언니가 부탁한형식으로 json제작 근데 막. ''이거잇음
-
-        #지금 이 부분이 안됨...
-        # output_result = []
-        # ans_num = 0
-        # index = 0
-        # r_list = []
-        # json_r = dict()
-        #
-        # print(len(result_fix3))
-        # for result in result_fix3:
-        #     label = result['label']
-        #     if (index == 0):
-        #         r_list.append(result)
-        #     else:
-        #         if (label == 'spn' or label == 'page_num'):  # stop
-        #             json_r['ans'] = r_list
-        #             print(json_r)
-        #
-        #             output_result.append(json_r)
-        #             #output_result[ans_num] = json_r
-        #             ans_num = ans_num+1
-        #             #output_result.append(json.dumps(json_r))
-        #             r_list.clear()
-        #             r_list.append(result)
-        #         else:
-        #             r_list.append(result)
-        #
-        #     index = index + 1
-        #
-        # #output_result[ans_num] = json_r
-        # json_r['ans'] = r_list
-        # print(json_r)
-        # #json_r[ans_num] = r_list
-        # output_result.append(json_r)
-        #
-        # ##이게 최종 한페이지에 대한 리턴#####  output_result
-        # print("<output_result>")
-        # print(output_result)
-        # print(len(output_result))
-        # #to_node.append(output_result)
 
     return jsonify({
         "yolo_result": to_node
     })
+
 
 @app.route('/test', methods=['POST'])
 def test():

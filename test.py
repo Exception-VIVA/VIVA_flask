@@ -10,7 +10,7 @@ from darkflow.darkflow.net.build import TFNet
 from flask import Flask, request, jsonify
 
 # 이미지 불러오기
-req = urllib.request.urlopen("https://viva-s3-capstone.s3.ap-northeast-2.amazonaws.com/test.jpg")
+req = urllib.request.urlopen("https://viva-s3-capstone.s3.ap-northeast-2.amazonaws.com/201002_perfect.jpg")
 img = np.asarray(bytearray(req.read()), dtype="uint8")
 img = cv2.imdecode(img, cv2.IMREAD_COLOR)
 # 업로드 폴더에 있는 해당 이미지 읽기
@@ -130,6 +130,7 @@ output_json = []
 # class_ids = []
 # confidences = []
 # boxes = []
+flag = True
 for out in outs:
     for detection in out:
         scores = detection[5:]
@@ -154,16 +155,17 @@ for out in outs:
             output["w"] = int(w)
             output["h"] = int(h)
 
-            if (label == 'check_box' or label == 'uncheck_box'):
-                output["recognition_word"] = 'null'
-            else:
+            if (label == 'short_ans'):
                 cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
-                # cv2.imshow("image", cropped_img)
-                # cv2.waitKey(0)
-                # cv2.destroyAllWindows()
-                #여기까지 문제없음
                 recognition_words = read_ocr(cropped_img)
                 output["recognition_word"] = recognition_words
+            elif (label == 'spn' and flag == True):
+                cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
+                recognition_words = read_ocr(cropped_img)
+                output["recognition_word"] = recognition_words
+                flag = False
+            else:
+                output["recognition_word"] = 'null'
 
             # 이거다 원형 -> darkflow에서 제공하던 버전이랑 똑같음
             json.dumps(output)
@@ -236,30 +238,30 @@ for result in result_fix3[:]:
     index = index + 1
 
 # 현지언니가 부탁한형식으로 json제작 근데 막. ''이거잇음 ㅅㅂ
-
-output_result = []
-index = 0
-r_list = []
-
-for result in result_fix3:
-    label = result['label']
-    if (index == 0):
-        r_list.append(result)
-    else:
-        if (label == 'spn' or label == 'page_num'):  # stop
-            json_r = dict()
-            json_r["ans"] = r_list
-            #output_result.append(json_r)
-            output_result.append(json.dumps(json_r))
-            r_list.clear()
-            r_list.append(result)
-        else:
-            r_list.append(result)
-
-    index = index + 1
-#output_result.append(json_r)
-output_result.append(json.dumps(json_r))
-
-##이게 최종 한페이지에 대한 리턴#####  output_result
-print("<output_result>")
-print(output_result)
+#
+# output_result = []
+# index = 0
+# r_list = []
+#
+# for result in result_fix3:
+#     label = result['label']
+#     if (index == 0):
+#         r_list.append(result)
+#     else:
+#         if (label == 'spn' or label == 'page_num'):  # stop
+#             json_r = dict()
+#             json_r["ans"] = r_list
+#             #output_result.append(json_r)
+#             output_result.append(json.dumps(json_r))
+#             r_list.clear()
+#             r_list.append(result)
+#         else:
+#             r_list.append(result)
+#
+#     index = index + 1
+# #output_result.append(json_r)
+# output_result.append(json.dumps(json_r))
+#
+# ##이게 최종 한페이지에 대한 리턴#####  output_result
+# print("<output_result>")
+print(result_fix3)
