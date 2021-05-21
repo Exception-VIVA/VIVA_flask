@@ -7,6 +7,7 @@ import json
 import urllib.request
 from collections import OrderedDict
 from flask import Flask, request, jsonify
+from skimage.filters import threshold_local
 
 app = Flask(__name__)
 
@@ -108,9 +109,21 @@ def yolo():
         img = np.asarray(bytearray(req.read()), dtype="uint8")
         img = cv2.imdecode(img, cv2.IMREAD_COLOR)
         # 업로드 폴더에 있는 해당 이미지 읽기
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img_scan = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)  # 원본 이미지와 흑백이미지가 따로 존재
+
+        # 이미지 이진화
+        T = threshold_local(img_scan, 15, offset=16, method="gaussian")
+        img_scan = (img_scan > T).astype("uint8") * 255
+
+        # 다시 채널3개로 되돌리기
+        img_scan = cv2.cvtColor(img_scan, cv2.COLOR_GRAY2BGR)
+        # imgf = np.concatenate((img,img),axis=1)
+        # print(imgf.shape)
+
+        img_scan = cv2.resize(img_scan, None, fx=0.4, fy=0.4)
         img = cv2.resize(img, None, fx=0.4, fy=0.4)
-        height, width, channels = img.shape
+        height, width, channels = img_scan.shape
 
         # Yolo 로드
         net = cv2.dnn.readNet("version3/viva-yolov3-tiny-detection-v2_48000.weights",
@@ -124,7 +137,7 @@ def yolo():
         colors = np.random.uniform(0, 255, size=(len(classes), 3))
 
         # Detecting objects
-        blob = cv2.dnn.blobFromImage(img, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
+        blob = cv2.dnn.blobFromImage(img_scan, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
         net.setInput(blob)
         outs = net.forward(output_layers)
 
@@ -236,6 +249,15 @@ def yolo():
                 recognition_words = read_ocr(cropped_img)
                 result["recognition_word"] = recognition_words
             elif (result['label'] == 'spn' and flag == True):
+                x = result['x']
+                y = result['y']
+                w = result['w']
+                h = result['h']
+                flag = False
+                cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
+                recognition_words = read_ocr(cropped_img)
+                result["recognition_word"] = recognition_words
+            elif (result['label'] == 'sn_sw' and flag == True):
                 x = result['x']
                 y = result['y']
                 w = result['w']

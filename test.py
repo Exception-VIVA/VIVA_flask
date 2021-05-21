@@ -6,7 +6,6 @@ import requests
 import json
 import urllib.request
 from collections import OrderedDict
-from darkflow.darkflow.net.build import TFNet
 from flask import Flask, request, jsonify
 
 # 이미지 불러오기
