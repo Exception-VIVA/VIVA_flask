@@ -10,7 +10,7 @@ from darkflow.darkflow.net.build import TFNet
 from flask import Flask, request, jsonify
 
 # 이미지 불러오기
-req = urllib.request.urlopen("https://viva-s3-capstone.s3.ap-northeast-2.amazonaws.com/201002_perfect.jpg")
+req = urllib.request.urlopen("https://viva-s3-capstone.s3.ap-northeast-2.amazonaws.com/190901_test+(1).jpg")
 img = np.asarray(bytearray(req.read()), dtype="uint8")
 img = cv2.imdecode(img, cv2.IMREAD_COLOR)
 # 업로드 폴더에 있는 해당 이미지 읽기
@@ -130,7 +130,6 @@ output_json = []
 # class_ids = []
 # confidences = []
 # boxes = []
-flag = True
 for out in outs:
     for detection in out:
         scores = detection[5:]
@@ -154,18 +153,7 @@ for out in outs:
             output["y"] = int(y)
             output["w"] = int(w)
             output["h"] = int(h)
-
-            if (label == 'short_ans'):
-                cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
-                recognition_words = read_ocr(cropped_img)
-                output["recognition_word"] = recognition_words
-            elif (label == 'spn' and flag == True):
-                cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
-                recognition_words = read_ocr(cropped_img)
-                output["recognition_word"] = recognition_words
-                flag = False
-            else:
-                output["recognition_word"] = 'null'
+            output["recognition_word"] = 'null'
 
             # 이거다 원형 -> darkflow에서 제공하던 버전이랑 똑같음
             json.dumps(output)
@@ -237,7 +225,33 @@ for result in result_fix3[:]:
         size_past = size_now
     index = index + 1
 
-# 현지언니가 부탁한형식으로 json제작 근데 막. ''이거잇음 ㅅㅂ
+    # ocr적용해서 읽어들인 내용 수정
+    flag = True
+    for result in result_fix3[:]:
+
+        if (result['label'] == 'short_ans'):
+            x = result['x']
+            y = result['y']
+            w = result['w']
+            h = result['h']
+            cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
+            recognition_words = read_ocr(cropped_img)
+            result["recognition_word"] = recognition_words
+        elif (result['label'] == 'spn' and flag == True):
+            x = result['x']
+            y = result['y']
+            w = result['w']
+            h = result['h']
+            flag = False
+            cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
+            cv2.imshow("test", cropped_img)
+            cv2.waitKey(0)
+            cv2.destroyAllWindows()
+            recognition_words = read_ocr(cropped_img)
+            result["recognition_word"] = recognition_words
+
+    print(result_fix3)
+
 #
 # output_result = []
 # index = 0
@@ -264,4 +278,3 @@ for result in result_fix3[:]:
 #
 # ##이게 최종 한페이지에 대한 리턴#####  output_result
 # print("<output_result>")
-print(result_fix3)

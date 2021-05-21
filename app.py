@@ -6,16 +6,9 @@ import requests
 import json
 import urllib.request
 from collections import OrderedDict
-from darkflow.darkflow.net.build import TFNet
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-
-options = {"model": "./darkflow/cfg/my-tiny-yolo.cfg",
-           "pbLoad": "./darkflow/darkflow/built_graph/my-tiny-yolo.pb",
-           "metaLoad": './darkflow/darkflow/built_graph/my-tiny-yolo.meta', "threshold": 0.4
-           }
-tfnet = TFNet(options)
 
 LIMIT_PX = 1024
 LIMIT_BYTE = 1024 * 1024  # 1MB
@@ -141,7 +134,6 @@ def yolo():
         # class_ids = []
         # confidences = []
         # boxes = []
-        flag = True
         for out in outs:
             for detection in out:
                 scores = detection[5:]
@@ -165,18 +157,7 @@ def yolo():
                     output["y"] = int(y)
                     output["w"] = int(w)
                     output["h"] = int(h)
-
-                    if (label == 'short_ans'):
-                        cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
-                        recognition_words = read_ocr(cropped_img)
-                        output["recognition_word"] = recognition_words
-                    elif (label == 'spn' and flag == True):
-                        cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
-                        recognition_words = read_ocr(cropped_img)
-                        output["recognition_word"] = recognition_words
-                        flag = False
-                    else:
-                        output["recognition_word"] = 'null'
+                    output["recognition_word"] = 'null'
 
                     # 이거다 원형 -> darkflow에서 제공하던 버전이랑 똑같음
                     json.dumps(output)
@@ -234,20 +215,35 @@ def yolo():
                     if (label_now == label_past):
                         # 크기가 더 작은 쪽을 제거함 -> 제거한 것을 출력해서 확인함
                         if (size_now < size_past):
-                            if (label_now == 'spn' and result_fix3[index] == 'null'):
-                                del (result_fix3[index])
-                            else:
-                                del (result_fix3[index - 1])
+                            del (result_fix3[index])
                         else:
-                            if (label_now == 'spn' and result_fix3[index - 1] == 'null'):
-                                del (result_fix3[index - 1])
-                            else:
-                                del (result_fix3[index])
+                            del (result_fix3[index - 1])
                         index = index - 1
 
                 label_past = label_now
                 size_past = size_now
             index = index + 1
+
+        # ocr적용해서 읽어들인 내용 수정
+        flag = True
+        for result in result_fix3[:]:
+            if (result['label'] == 'short_ans'):
+                x = result['x']
+                y = result['y']
+                w = result['w']
+                h = result['h']
+                cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
+                recognition_words = read_ocr(cropped_img)
+                result["recognition_word"] = recognition_words
+            elif (result['label'] == 'spn' and flag == True):
+                x = result['x']
+                y = result['y']
+                w = result['w']
+                h = result['h']
+                flag = False
+                cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
+                recognition_words = read_ocr(cropped_img)
+                result["recognition_word"] = recognition_words
 
         to_node.append(result_fix3)
 
