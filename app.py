@@ -245,7 +245,7 @@ def yolo():
                 y = result['y']
                 w = result['w']
                 h = result['h']
-                cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
+                cropped_img = img[y - 7:y + h + 7, x - 7:x + w + 7]
                 recognition_words = read_ocr(cropped_img)
                 result["recognition_word"] = recognition_words
             elif (result['label'] == 'spn' and flag == True):
@@ -254,7 +254,7 @@ def yolo():
                 w = result['w']
                 h = result['h']
                 flag = False
-                cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
+                cropped_img = img[y - 7:y + h + 7, x - 7:x + w + 7]
                 recognition_words = read_ocr(cropped_img)
                 result["recognition_word"] = recognition_words
             elif (result['label'] == 'sn_sw' and flag == True):
@@ -263,7 +263,7 @@ def yolo():
                 w = result['w']
                 h = result['h']
                 flag = False
-                cropped_img = img[y - 15:y + h + 15, x - 15:x + w + 15]
+                cropped_img = img[y - 7:y + h + 7, x - 7:x + w + 7]
                 recognition_words = read_ocr(cropped_img)
                 result["recognition_word"] = recognition_words
 
