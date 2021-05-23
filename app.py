@@ -121,8 +121,8 @@ def yolo():
         # imgf = np.concatenate((img,img),axis=1)
         # print(imgf.shape)
 
-        img_scan = cv2.resize(img_scan, None, fx=0.4, fy=0.4)
-        img = cv2.resize(img, None, fx=0.4, fy=0.4)
+        img_scan = cv2.resize(img_scan, None, fx=0.8, fy=0.8)
+        img = cv2.resize(img, None, fx=0.8, fy=0.8)
         height, width, channels = img_scan.shape
 
         # Yolo 로드
@@ -245,7 +245,7 @@ def yolo():
                 y = result['y']
                 w = result['w']
                 h = result['h']
-                cropped_img = img[y - 7:y + h + 7, x - 7:x + w + 7]
+                cropped_img = img[y - 10:y + h + 10, x - 10:x + w + 10]
                 recognition_words = read_ocr(cropped_img)
                 result["recognition_word"] = recognition_words
             elif (result['label'] == 'spn' and flag == True):
@@ -254,7 +254,7 @@ def yolo():
                 w = result['w']
                 h = result['h']
                 flag = False
-                cropped_img = img[y - 7:y + h + 7, x - 7:x + w + 7]
+                cropped_img = img[y - 10:y + h + 10, x - 10:x + w + 10]
                 recognition_words = read_ocr(cropped_img)
                 result["recognition_word"] = recognition_words
             elif (result['label'] == 'sn_sw' and flag == True):
