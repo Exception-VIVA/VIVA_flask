@@ -98,7 +98,7 @@ def hello_world():
 def yolo():
     filenames = request.args["file_name"]
     filenames = filenames.split(',')
-    del filenames[0]  # workbook_sn 삭제
+    #del filenames[0]  # workbook_sn 삭제
     to_node = []
 
     for filename in filenames:
