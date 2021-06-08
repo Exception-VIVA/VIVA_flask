@@ -1,6 +1,8 @@
-# YOLO
+# YOLOv3
 
-version5
+
+
+최종 버전 : version5
 
 사용자가 촬영한 시험지 이미지에서 채점에 필요한 요소를 찾아내는 CNN 모델
 
