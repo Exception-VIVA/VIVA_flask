@@ -257,7 +257,6 @@ left.extend(right)
 result_fix3 = left
 
 #3. 중복 detection을 제거 
-# 지금 오류있음 -> 저거 딜리트되면 reuslt_fix땡겨져서 하나 넘어가짐; 
 
 index = 0
 
