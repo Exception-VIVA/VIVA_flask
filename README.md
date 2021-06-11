@@ -46,6 +46,7 @@ YOLO v3 model
 ## Training Data set
 
 https://drive.google.com/drive/folders/1_jFmNMwpSq_7FyYI7VtYmvvBxcptDpyI?usp=sharing
+
 모델학습에 사용한 데이터 모음
 
 
